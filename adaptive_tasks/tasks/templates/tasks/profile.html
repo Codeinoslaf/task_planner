@@ -1,0 +1,322 @@
+{% extends 'tasks/base.html' %}
+{% load static %}
+
+{% block title %}Профиль{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'tasks/css/profile.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="profile">
+    <header class="profile-header">
+        <div class="profile-title-wrap">
+            <h1>Мой профиль</h1>
+            <p class="profile-subtitle">Краткая сводка по задачам и адаптивным рекомендациям</p>
+        </div>
+        <div class="profile-user">
+            <div class="profile-user__avatar">{{ request.user.username|first|upper }}</div>
+            <div class="profile-user__info">
+                <div class="profile-user__name">{{ request.user.username }}</div>
+                <div class="profile-user__joined">С нами с {{ request.user.date_joined|date:"d.m.Y" }}</div>
+            </div>
+            <form method="post" action="{% url 'logout' %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-logout"><span>Выйти</span></button>
+            </form>
+        </div>
+    </header>
+
+    <section class="profile-overview">
+        <div class="status-panel">
+            <div class="panel-head">
+                <div>
+                    <h2>Статус задач</h2>
+                    <p>Нажмите на показатель, чтобы открыть список</p>
+                </div>
+                <a href="{% url 'task_list' %}?filter=all" class="mini-link">Все задачи</a>
+            </div>
+            <div class="status-chart-wrap">
+                <canvas id="statusChart" width="260" height="260"></canvas>
+                <div class="status-chart-center">
+                    <span>{{ total_tasks }}</span>
+                    <small>всего</small>
+                </div>
+            </div>
+            <div class="status-legend">
+                <a href="{% url 'task_list' %}?filter=completed" class="legend-item legend-item--done">
+                    <span></span>
+                    <strong>{{ completed_tasks }}</strong>
+                    <em>выполнено</em>
+                </a>
+                <a href="{% url 'task_list' %}?filter=active" class="legend-item legend-item--active">
+                    <span></span>
+                    <strong>{{ active_tasks }}</strong>
+                    <em>активно</em>
+                </a>
+                <a href="{% url 'task_list' %}?filter=overdue" class="legend-item legend-item--late">
+                    <span></span>
+                    <strong>{{ overdue_tasks }}</strong>
+                    <em>просрочено</em>
+                </a>
+            </div>
+        </div>
+
+        <div class="overview-metrics">
+            <a href="{% url 'task_list' %}?filter=completed" class="metric-card metric-card--green">
+                <span class="metric-card__label">Выполнение</span>
+                <strong>{{ completion_rate }}%</strong>
+                <small>закрытых задач от общего числа</small>
+            </a>
+            <div class="metric-card metric-card--blue">
+                <span class="metric-card__label">В срок</span>
+                <strong>{{ on_time_rate }}%</strong>
+                <small>по завершенным задачам</small>
+            </div>
+            <div class="metric-card metric-card--amber">
+                <span class="metric-card__label">Отклонение</span>
+                <strong>{% if avg_delay >= 0 %}+{% endif %}{{ avg_delay }}</strong>
+                <small>дней в среднем</small>
+            </div>
+            <div class="metric-card metric-card--violet">
+                <span class="metric-card__label">Лучшее время</span>
+                <strong>{% if best_time_slot %}{{ best_time_slot.name }}{% else %}—{% endif %}</strong>
+                <small>{% if best_time_slot %}{{ best_time_slot.on_time_rate }}% задач вовремя{% else %}нужно больше истории{% endif %}</small>
+            </div>
+        </div>
+    </section>
+
+    <nav class="profile-tabs" aria-label="Разделы профиля">
+        <button class="profile-tab is-active" type="button" data-tab="summary">Обзор</button>
+        <button class="profile-tab" type="button" data-tab="planning">Планирование</button>
+        <button class="profile-tab" type="button" data-tab="time">Время дня</button>
+        <button class="profile-tab" type="button" data-tab="contexts">Контексты</button>
+        <button class="profile-tab" type="button" data-tab="history">История</button>
+        <button class="profile-tab" type="button" data-tab="recs">Рекомендации</button>
+    </nav>
+
+    <section class="tab-panel is-active" data-panel="summary">
+        <div class="details-grid">
+            <div class="detail-item">
+                <div class="detail-label">Средняя продуктивность</div>
+                <div class="detail-value">
+                    {% if completion_rate >= 80 %}Отлично
+                    {% elif completion_rate >= 60 %}Хорошо
+                    {% elif completion_rate >= 40 %}Средне
+                    {% else %}Нужно подтянуть{% endif %}
+                </div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Тенденция выполнения</div>
+                <div class="detail-value">
+                    {% if avg_delay < 0 %}С опережением
+                    {% elif avg_delay == 0 %}Точно в срок
+                    {% else %}Есть задержки{% endif %}
+                </div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Самый продуктивный день</div>
+                <div class="detail-value">{% if productive_day %}{{ productive_day }}{% else %}Нет данных{% endif %}</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Точность планирования</div>
+                <div class="detail-value">
+                    {% if accuracy_trend == 'improving' %}Улучшается
+                    {% elif accuracy_trend == 'declining' %}Снижается
+                    {% elif accuracy_trend == 'stable' %}Стабильная
+                    {% else %}Мало данных{% endif %}
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="tab-panel" data-panel="planning">
+        <div class="panel-head panel-head--compact">
+            <div>
+                <h2>Горизонт планирования</h2>
+                <p>Как ведут себя короткие, средние и длинные задачи</p>
+            </div>
+        </div>
+        <div class="categories-table">
+            <div class="categories-table__head">
+                <span>Тип</span>
+                <span>Всего</span>
+                <span>Вовремя</span>
+                <span>Просрочено</span>
+                <span>Среднее отклонение</span>
+            </div>
+            {% for group in planning_groups %}
+            <div class="categories-table__row">
+                <span>{{ group.icon }} {{ group.name }} <small>{{ group.description }}</small></span>
+                <span class="cat-num">{{ group.total }}</span>
+                <span class="cat-num cat-num--success">{{ group.on_time_rate }}%</span>
+                <span class="cat-num cat-num--danger">{{ group.overdue }}</span>
+                <span class="cat-num">{% if group.avg_delay > 0 %}+{% endif %}{{ group.avg_delay }} дн.</span>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    <section class="tab-panel" data-panel="time">
+        <div class="panel-head panel-head--compact">
+            <div>
+                <h2>Эффективность по времени дня</h2>
+                <p>В какие периоды дедлайны чаще закрываются вовремя</p>
+            </div>
+        </div>
+        <div class="categories-table">
+            <div class="categories-table__head">
+                <span>Период</span>
+                <span>Всего</span>
+                <span>Вовремя</span>
+                <span>Просрочено</span>
+                <span>Среднее отклонение</span>
+            </div>
+            {% for slot in time_slots %}
+            <div class="categories-table__row">
+                <span>{{ slot.icon }} {{ slot.name }} <small>{{ slot.description }}</small></span>
+                <span class="cat-num">{{ slot.total }}</span>
+                <span class="cat-num cat-num--success">{{ slot.on_time_rate }}%</span>
+                <span class="cat-num cat-num--danger">{{ slot.overdue }}</span>
+                <span class="cat-num">{% if slot.avg_delay > 0 %}+{% endif %}{{ slot.avg_delay }} дн.</span>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    <section class="tab-panel" data-panel="contexts">
+        <div class="panel-head panel-head--compact">
+            <div>
+                <h2>Контексты задач</h2>
+                <p>Автоматическая классификация по смыслу задачи</p>
+            </div>
+        </div>
+        {% if context_groups %}
+        <div class="categories-table">
+            <div class="categories-table__head">
+                <span>Контекст</span>
+                <span>Всего</span>
+                <span>Вовремя</span>
+                <span>Просрочено</span>
+                <span>Среднее отклонение</span>
+            </div>
+            {% for group in context_groups %}
+            <div class="categories-table__row">
+                <span>{{ group.name }}</span>
+                <span class="cat-num">{{ group.total }}</span>
+                <span class="cat-num cat-num--success">{{ group.on_time_rate }}%</span>
+                <span class="cat-num cat-num--danger">{{ group.overdue }}</span>
+                <span class="cat-num">{% if group.avg_delay > 0 %}+{% endif %}{{ group.avg_delay }} дн.</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-analytics">Контексты появятся после завершения нескольких задач.</div>
+        {% endif %}
+    </section>
+
+    <section class="tab-panel" data-panel="history">
+        <div class="panel-head panel-head--compact">
+            <div>
+                <h2>План vs факт</h2>
+                <p>Последние завершенные задачи: плановый срок и фактическое выполнение</p>
+            </div>
+        </div>
+        {% if chart_data != '[]' %}
+        <div class="chart-wrapper">
+            <canvas id="planChart" height="120"></canvas>
+        </div>
+        {% else %}
+        <div class="empty-analytics">График появится после первых завершенных задач.</div>
+        {% endif %}
+    </section>
+
+    <section class="tab-panel" data-panel="recs">
+        <div class="panel-head panel-head--compact">
+            <div>
+                <h2>Рекомендации</h2>
+                <p>Короткие выводы на основе текущей истории</p>
+            </div>
+        </div>
+        <div class="recs-grid">
+            <div class="rec-card rec-card--{% if completion_rate >= 80 %}green{% elif completion_rate >= 50 %}yellow{% else %}red{% endif %}">
+                <div class="rec-card__header"><span class="rec-card__label">Эффективность</span></div>
+                <div class="rec-card__metric">{{ completion_rate }}%</div>
+                <div class="rec-card__text">
+                    {% if completion_rate >= 80 %}Большинство задач закрывается. Текущая система планирования работает уверенно.
+                    {% elif completion_rate >= 50 %}Половина задач выполняется. Стоит внимательнее выбирать объем на день.
+                    {% elif total_tasks > 0 %}Много задач остается незакрытыми. Лучше начинать с самых важных и дробить крупные.
+                    {% else %}Создайте первые задачи, чтобы система накопила историю.{% endif %}
+                </div>
+            </div>
+
+            <div class="rec-card rec-card--{% if overdue_tasks == 0 %}green{% elif overdue_tasks <= 3 %}yellow{% else %}red{% endif %}">
+                <div class="rec-card__header"><span class="rec-card__label">Просрочки</span></div>
+                <div class="rec-card__metric">{{ overdue_tasks }}</div>
+                <div class="rec-card__text">
+                    {% if overdue_tasks == 0 %}Просроченных задач нет. Это хороший знак для текущей нагрузки.
+                    {% elif overdue_tasks <= 3 %}Есть несколько задач, которые требуют внимания сегодня.
+                    {% else %}Просрочек много. Стоит пересмотреть ближайшие дедлайны и снять лишнюю нагрузку.{% endif %}
+                </div>
+            </div>
+
+            <div class="rec-card rec-card--{% if avg_delay <= 0 %}green{% elif avg_delay <= 2 %}yellow{% else %}red{% endif %}">
+                <div class="rec-card__header"><span class="rec-card__label">Точность сроков</span></div>
+                <div class="rec-card__metric">{% if avg_delay > 0 %}+{% endif %}{{ avg_delay }} дн.</div>
+                <div class="rec-card__text">
+                    {% if avg_delay <= 0 %}Задачи закрываются в срок или раньше. Можно сохранять текущий стиль планирования.
+                    {% elif avg_delay <= 2 %}Задержки небольшие. Добавляйте небольшой буфер к сложным задачам.
+                    {% else %}Задержки заметные. Крупные задачи лучше делить на этапы с отдельными сроками.{% endif %}
+                </div>
+            </div>
+
+            <div class="rec-card rec-card--{% if on_time_rate >= 80 %}green{% elif on_time_rate >= 50 %}yellow{% else %}red{% endif %}">
+                <div class="rec-card__header"><span class="rec-card__label">Своевременность</span></div>
+                <div class="rec-card__metric">{{ on_time_rate }}%</div>
+                <div class="rec-card__text">
+                    {% if on_time_rate >= 80 %}Высокая доля задач выполняется вовремя.
+                    {% elif on_time_rate >= 50 %}Результат средний. Уведомления и более мягкие сроки помогут удерживать темп.
+                    {% elif completed_tasks > 0 %}AI-подсказки при создании задач стоит использовать чаще: история показывает риск срыва.
+                    {% else %}Завершите несколько задач, чтобы оценить своевременность.{% endif %}
+                </div>
+            </div>
+
+            <div class="rec-card rec-card--blue">
+                <div class="rec-card__header"><span class="rec-card__label">Лучшее время</span></div>
+                <div class="rec-card__metric">{% if best_time_slot %}{{ best_time_slot.name }}{% else %}—{% endif %}</div>
+                <div class="rec-card__text">
+                    {% if best_time_slot %}В этот период задачи закрываются вовремя чаще всего: {{ best_time_slot.on_time_rate }}%.
+                    {% else %}Нужно больше завершенных задач, чтобы определить лучший период.{% endif %}
+                </div>
+            </div>
+
+            <div class="rec-card rec-card--{% if accuracy_trend == 'improving' %}green{% elif accuracy_trend == 'declining' %}red{% else %}blue{% endif %}">
+                <div class="rec-card__header"><span class="rec-card__label">Динамика</span></div>
+                <div class="rec-card__metric">
+                    {% if accuracy_trend == 'improving' %}Растет
+                    {% elif accuracy_trend == 'declining' %}Падает
+                    {% elif accuracy_trend == 'stable' %}Стабильно
+                    {% else %}—{% endif %}
+                </div>
+                <div class="rec-card__text">
+                    {% if accuracy_trend == 'improving' %}Точность планирования улучшается.
+                    {% elif accuracy_trend == 'declining' %}Точность снижается. Возможно, задач стало слишком много.
+                    {% elif accuracy_trend == 'stable' %}Планирование держится на одном уровне.
+                    {% else %}Нужна история из нескольких завершенных задач.{% endif %}
+                </div>
+            </div>
+        </div>
+    </section>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+    window.PROFILE_CONFIG = {
+        chartData: {{ chart_data|safe }},
+        statusData: {{ status_chart_data|safe }},
+    };
+</script>
+<script src="{% static 'tasks/js/profile.js' %}"></script>
+{% endblock %}

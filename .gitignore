@@ -1,0 +1,5 @@
+/.venv
+/adaptive_tasks/.env
+.git
+adaptive_tasks/adaptive_tasks/__pycache__
+adaptive_tasks/tasks/migrations

@@ -1,0 +1,364 @@
+{% extends 'tasks/base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'tasks/css/profile.css' %}">
+<style>
+    .tasks-list-container {
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+    }
+
+    .tasks-list-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 20px;
+        background: rgba(15, 23, 42, 0.6);
+        backdrop-filter: blur(10px);
+        padding: 32px;
+        border-radius: 20px;
+        border: 1px solid rgba(139, 92, 246, 0.2);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    }
+
+    .tasks-list-header h1 {
+        margin: 0;
+        font-size: 32px;
+        font-weight: 700;
+        background: linear-gradient(135deg, #fbbf24, #f59e0b, #fb923c);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .tasks-list-header p {
+        margin: 8px 0 0;
+        font-size: 15px;
+        color: #94a3b8;
+    }
+
+    .task-filters {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        padding: 20px;
+        background: rgba(15, 23, 42, 0.6);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        border: 1px solid rgba(139, 92, 246, 0.2);
+    }
+
+    .filter-btn {
+        padding: 10px 18px;
+        border-radius: 12px;
+        border: 1px solid rgba(139, 92, 246, 0.4);
+        background: rgba(15, 23, 42, 0.8);
+        color: #e2e8f0;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-block;
+    }
+
+    .filter-btn:hover {
+        background: rgba(139, 92, 246, 0.3);
+        border-color: #8b5cf6;
+        transform: translateY(-2px);
+    }
+
+    .filter-btn--active {
+        background: linear-gradient(135deg, #8b5cf6, #6366f1);
+        border-color: #8b5cf6;
+    }
+
+    .tasks-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .task-card {
+        background: rgba(15, 23, 42, 0.6);
+        backdrop-filter: blur(10px);
+        padding: 24px;
+        border-radius: 20px;
+        border: 1px solid rgba(139, 92, 246, 0.2);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        transition: all 0.3s ease;
+    }
+
+    .task-card:hover {
+        border-color: rgba(139, 92, 246, 0.4);
+        box-shadow: 0 12px 40px rgba(139, 92, 246, 0.2);
+        transform: translateY(-4px);
+    }
+
+    .task-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 16px;
+        margin-bottom: 16px;
+    }
+
+    .task-card-title {
+        font-size: 20px;
+        font-weight: 700;
+        color: #e2e8f0;
+        margin: 0;
+    }
+
+    .task-status-badge {
+        padding: 6px 12px;
+        border-radius: 8px;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .task-status-badge--completed {
+        background: rgba(34, 197, 94, 0.2);
+        color: #86efac;
+        border: 1px solid rgba(34, 197, 94, 0.3);
+    }
+
+    .task-status-badge--overdue {
+        background: rgba(239, 68, 68, 0.2);
+        color: #fca5a5;
+        border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    .task-status-badge--active {
+        background: rgba(59, 130, 246, 0.2);
+        color: #60a5fa;
+        border: 1px solid rgba(59, 130, 246, 0.3);
+    }
+
+    .task-card-description {
+        color: #cbd5e1;
+        font-size: 14px;
+        margin-bottom: 16px;
+        line-height: 1.6;
+    }
+
+    .task-card-meta {
+        display: flex;
+        gap: 20px;
+        font-size: 13px;
+        color: #94a3b8;
+        margin-bottom: 16px;
+    }
+
+    .task-card-meta-item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .task-card-actions {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .task-action-btn {
+        padding: 10px 16px;
+        border-radius: 10px;
+        border: none;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .task-action-btn--complete {
+        background: rgba(34, 197, 94, 0.2);
+        color: #86efac;
+        border: 1px solid rgba(34, 197, 94, 0.3);
+    }
+
+    .task-action-btn--complete:hover {
+        background: rgba(34, 197, 94, 0.3);
+    }
+
+    .task-action-btn--delete {
+        background: rgba(239, 68, 68, 0.2);
+        color: #fca5a5;
+        border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    .task-action-btn--delete:hover {
+        background: rgba(239, 68, 68, 0.3);
+    }
+
+    .task-action-btn--edit {
+        background: rgba(59, 130, 246, 0.2);
+        color: #60a5fa;
+        border: 1px solid rgba(59, 130, 246, 0.3);
+    }
+
+    .task-action-btn--edit:hover {
+        background: rgba(59, 130, 246, 0.3);
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        background: rgba(15, 23, 42, 0.6);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        border: 1px solid rgba(139, 92, 246, 0.2);
+    }
+
+    .empty-state-icon {
+        font-size: 64px;
+        margin-bottom: 20px;
+    }
+
+    .empty-state-title {
+        font-size: 24px;
+        font-weight: 700;
+        color: #e2e8f0;
+        margin-bottom: 12px;
+    }
+
+    .empty-state-description {
+        font-size: 16px;
+        color: #94a3b8;
+        margin-bottom: 24px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="tasks-list-container">
+    <header class="tasks-list-header">
+        <div>
+            <h1>{{ page_title }}</h1>
+            <p>{{ page_subtitle }}</p>
+        </div>
+
+    </header>
+
+    <div class="task-filters">
+        <a href="{% url 'task_list' %}?filter=all" class="filter-btn {% if current_filter == 'all' %}filter-btn--active{% endif %}">
+            📊 Все задачи ({{ total_count }})
+        </a>
+        <a href="{% url 'task_list' %}?filter=active" class="filter-btn {% if current_filter == 'active' %}filter-btn--active{% endif %}">
+            🎯 Активные ({{ active_count }})
+        </a>
+        <a href="{% url 'task_list' %}?filter=completed" class="filter-btn {% if current_filter == 'completed' %}filter-btn--active{% endif %}">
+            ✅ Выполненные ({{ completed_count }})
+        </a>
+        <a href="{% url 'task_list' %}?filter=overdue" class="filter-btn {% if current_filter == 'overdue' %}filter-btn--active{% endif %}">
+            ⏰ Просроченные ({{ overdue_count }})
+        </a>
+    </div>
+
+    {% if tasks %}
+    <div class="tasks-grid">
+        {% for task in tasks %}
+        <div class="task-card">
+            <div class="task-card-header">
+                <h3 class="task-card-title">{{ task.title }}</h3>
+                <span class="task-status-badge task-status-badge--{{ task.status }}">
+                    {% if task.status == 'completed' %}
+                    ✓ Выполнено
+                    {% elif task.status == 'overdue' %}
+                    ⏰ Просрочено
+                    {% else %}
+                    🎯 Активно
+                    {% endif %}
+                </span>
+            </div>
+
+            {% if task.description %}
+            <p class="task-card-description">{{ task.description }}</p>
+            {% endif %}
+
+            <div class="task-card-meta">
+                <div class="task-card-meta-item">
+                    <span>📅</span>
+                    <span>{{ task.planned_deadline|date:"d.m.Y H:i" }}</span>
+                </div>
+                {% if task.actual_deadline %}
+                <div class="task-card-meta-item">
+                    <span>✓</span>
+                    <span>Завершено: {{ task.actual_deadline|date:"d.m.Y H:i" }}</span>
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="task-card-actions">
+                {% if task.status != 'completed' %}
+                <form method="post" action="{% url 'complete_task' task.id %}" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="task-action-btn task-action-btn--complete">
+                        ✓ Завершить
+                    </button>
+                </form>
+                {% endif %}
+
+                <form method="post" action="{% url 'delete_task' task.id %}" style="display: inline;" onsubmit="return confirm('Вы уверены, что хотите удалить эту задачу?');">
+                    {% csrf_token %}
+                    <button type="submit" class="task-action-btn task-action-btn--delete">
+                        🗑 Удалить
+                    </button>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-state-icon">
+            {% if current_filter == 'completed' %}
+            📝
+            {% elif current_filter == 'overdue' %}
+            🎉
+            {% elif current_filter == 'active' %}
+            ✨
+            {% else %}
+            📋
+            {% endif %}
+        </div>
+        <h2 class="empty-state-title">
+            {% if current_filter == 'completed' %}
+            Нет выполненных задач
+            {% elif current_filter == 'overdue' %}
+            Нет просроченных задач
+            {% elif current_filter == 'active' %}
+            Нет активных задач
+            {% else %}
+            Нет задач
+            {% endif %}
+        </h2>
+        <p class="empty-state-description">
+            {% if current_filter == 'completed' %}
+            Начните выполнять задачи, и они появятся здесь
+            {% elif current_filter == 'overdue' %}
+            Отлично! У вас нет просроченных задач
+            {% elif current_filter == 'active' %}
+            Создайте новую задачу в календаре
+            {% else %}
+            Создайте первую задачу в календаре
+            {% endif %}
+        </p>
+        <a href="{% url 'calendar' %}" class="btn" style="margin-top: 20px;">
+            <span>📅 Перейти к календарю</span>
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

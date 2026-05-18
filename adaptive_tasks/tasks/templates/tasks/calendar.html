@@ -1,0 +1,129 @@
+{% extends 'tasks/base.html' %}
+{% load static %}
+
+{% block title %}Календарь{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'tasks/css/calendar.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="calendar-layout">
+    <div class="calendar-shell" id="calendar-shell">
+        <header class="calendar-header">
+            <div class="calendar-title-wrap">
+                <h1 id="current-month-year">Январь 2026</h1>
+                <p class="calendar-subtitle">Планируйте свои задачи</p>
+            </div>
+            <div class="calendar-nav">
+                <button onclick="previousMonth()">← Назад</button>
+                <button onclick="nextMonth()">Вперёд →</button>
+                <button onclick="goToday()">Сегодня</button>
+            </div>
+        </header>
+
+        <div class="calendar-grid">
+            <div class="calendar-weekdays">
+                <div class="weekday">Пн</div>
+                <div class="weekday">Вт</div>
+                <div class="weekday">Ср</div>
+                <div class="weekday">Чт</div>
+                <div class="weekday">Пт</div>
+                <div class="weekday">Сб</div>
+                <div class="weekday">Вс</div>
+            </div>
+            <div class="calendar-days" id="calendar-days"></div>
+        </div>
+    </div>
+
+    <aside id="side-panel" class="side-panel">
+        <div class="side-panel__head">
+            <div>
+                <h2 id="panel-title">Новая задача</h2>
+                <p id="selected-date-display" style="margin:4px 0 0;font-size:14px;color:#94a3b8;"></p>
+            </div>
+            <button type="button" class="side-panel__close" onclick="closePanel()">✕</button>
+        </div>
+
+        <form class="side-panel__form" id="task-form" method="post" action="{% url 'calendar' %}">
+            {% csrf_token %}
+            <input type="hidden" name="task_id" id="task-id">
+            <input type="hidden" name="planned_deadline" id="hidden-deadline">
+
+            <div class="form-group">
+                <label for="task-title">Название задачи</label>
+                <input type="text" id="task-title" name="title" required placeholder="Введите название" autocomplete="off">
+            </div>
+
+            <div class="form-group">
+                <label for="task-description">Описание</label>
+                <textarea id="task-description" name="description" placeholder="Добавьте описание (необязательно)"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="time-input">Время дедлайна</label>
+                <div class="time-picker-container">
+                    <input type="text" id="time-input" class="time-input-field"
+                        placeholder="09:30" readonly onclick="openTimePopup()"
+                        aria-label="Нажмите для выбора времени">
+                    <input type="hidden" id="task-time">
+                </div>
+            </div>
+
+            <div id="ai-hint-block" class="ai-hint-block" style="display:none;">
+                <div id="ai-hint-content"></div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn">
+                    <span id="submit-btn-text">💾 Сохранить</span>
+                </button>
+                <button type="button" class="btn btn--secondary" onclick="closePanel()">
+                    <span>Отмена</span>
+                </button>
+            </div>
+        </form>
+
+        <div id="panel-tasks-section" style="display:none;">
+            <h3 style="margin:24px 0 16px;font-size:18px;color:#cbd5e1;">Задачи на этот день</h3>
+            <div class="panel-tasks-list" id="panel-tasks-list"></div>
+        </div>
+    </aside>
+</div>
+
+<!-- Popup для ввода времени -->
+<div class="time-popup-overlay" id="time-popup-overlay" onclick="closeTimePopup()"></div>
+<div class="time-popup" id="time-popup">
+    <h3 class="time-popup-title">Выберите время</h3>
+    <div class="time-display" id="time-display"></div>
+    <div class="time-input-hint">Введите точное время или скорректируйте его шагами</div>
+    <input type="text" id="time-hidden-input" class="time-hidden-input" autocomplete="off">
+    <div class="time-stepper-grid">
+        <button type="button" class="time-step-btn" onclick="addTimeMinutes(-60)">−1 час</button>
+        <button type="button" class="time-step-btn" onclick="addTimeMinutes(60)">+1 час</button>
+        <button type="button" class="time-step-btn" onclick="addTimeMinutes(-15)">−15 мин</button>
+        <button type="button" class="time-step-btn" onclick="addTimeMinutes(15)">+15 мин</button>
+    </div>
+    <div class="time-quick-btns">
+        <button type="button" class="time-quick-btn" onclick="setQuickTime('now')">Сейчас</button>
+        <button type="button" class="time-quick-btn" onclick="setQuickTime('morning')">Утро<br>09:00</button>
+        <button type="button" class="time-quick-btn" onclick="setQuickTime('noon')">Обед<br>13:00</button>
+        <button type="button" class="time-quick-btn" onclick="setQuickTime('evening')">Вечер<br>17:00</button>
+    </div>
+    <div id="time-error" class="time-error"></div>
+    <div class="time-popup-actions">
+        <button type="button" class="time-popup-btn time-popup-btn--secondary" onclick="closeTimePopup()">Отмена</button>
+        <button type="button" class="time-popup-btn time-popup-btn--primary" id="confirm-time-btn" onclick="confirmTime()">Готово</button>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    window.CALENDAR_CONFIG = {
+        tasksData: {{ tasks_json|safe }},
+        csrfToken: '{{ csrf_token }}',
+    };
+</script>
+<script src="{% static 'tasks/js/calendar.js' %}"></script>
+{% endblock %}

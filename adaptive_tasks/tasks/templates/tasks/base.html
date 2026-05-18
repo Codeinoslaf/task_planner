@@ -1,0 +1,110 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Task Planner{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'tasks/css/base.css' %}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+<nav class="top-nav">
+    <div class="top-nav__logo">✨ Task Planner</div>
+    <div class="top-nav__links">
+        <a href="{% url 'calendar' %}">📅 Календарь</a>
+        {% if user.is_authenticated %}
+        <div class="notif-wrapper" id="notif-wrapper">
+            <button class="notif-bell-btn" id="notif-bell-btn" onclick="toggleNotifPanel()" title="Уведомления о дедлайнах">
+                <span class="notif-bell-icon">🔔</span>
+                <span class="notif-badge" id="notif-badge" style="display:none">0</span>
+            </button>
+            <div class="notif-panel" id="notif-panel">
+                <div class="notif-panel__head">
+                    <span>Ближайшие дедлайны</span>
+                    <span class="notif-panel__sub">следующие 24 часа</span>
+                </div>
+                <div id="notif-list">
+                    <div class="notif-empty">Загрузка...</div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        <a href="{% url 'profile' %}">👤 Профиль</a>
+    </div>
+</nav>
+
+<main class="page-wrapper">
+    {% block content %}{% endblock %}
+</main>
+
+{% if user.is_authenticated %}
+<div class="notif-toast-stack" id="notif-toast-stack" aria-live="polite"></div>
+{% endif %}
+
+{% block extra_js %}{% endblock %}
+
+{% if user.is_authenticated %}
+<script>
+    function toggleNotifPanel() {
+        document.getElementById('notif-panel').classList.toggle('active');
+    }
+
+    document.addEventListener('click', function (e) {
+        const wrapper = document.getElementById('notif-wrapper');
+        if (wrapper && !wrapper.contains(e.target)) {
+            document.getElementById('notif-panel').classList.remove('active');
+        }
+    });
+
+    function loadNotifications() {
+        fetch('/api/notifications/')
+            .then(r => r.ok ? r.json() : null)
+            .then(data => {
+                if (!data) return;
+                const badge = document.getElementById('notif-badge');
+                const list = document.getElementById('notif-list');
+
+                if (data.count > 0) {
+                    badge.textContent = data.count;
+                    badge.style.display = 'flex';
+                    document.getElementById('notif-bell-btn').classList.add('notif-bell-btn--active');
+                } else {
+                    badge.style.display = 'none';
+                    document.getElementById('notif-bell-btn').classList.remove('notif-bell-btn--active');
+                }
+
+                if (data.notifications.length === 0) {
+                    list.innerHTML = '<div class="notif-empty">Нет приближающихся дедлайнов</div>';
+                    return;
+                }
+
+                const urgencyCfg = {
+                    critical: { bg: 'rgba(239,68,68,0.12)', border: 'rgba(239,68,68,0.4)', color: '#fca5a5', icon: '🚨' },
+                    high:     { bg: 'rgba(251,191,36,0.12)', border: 'rgba(251,191,36,0.4)', color: '#fde68a', icon: '⚠️' },
+                    medium:   { bg: 'rgba(59,130,246,0.12)', border: 'rgba(59,130,246,0.4)',  color: '#93c5fd', icon: '🔔' },
+                };
+
+                list.innerHTML = data.notifications.map(n => {
+                    const c = urgencyCfg[n.urgency] || urgencyCfg.medium;
+                    return `<div class="notif-item" style="background:${c.bg};border-color:${c.border}">
+                        <span class="notif-item__icon">${c.icon}</span>
+                        <div class="notif-item__body">
+                            <div class="notif-item__title">${n.title}</div>
+                            <div class="notif-item__time" style="color:${c.color}">Через ${n.time_left}</div>
+                        </div>
+                    </div>`;
+                }).join('');
+            })
+            .catch(() => {
+                const list = document.getElementById('notif-list');
+                if (list) list.innerHTML = '<div class="notif-empty">Не удалось загрузить</div>';
+            });
+    }
+
+</script>
+<script src="{% static 'tasks/js/notifications.js' %}"></script>
+{% endif %}
+</body>
+</html>
