@@ -467,9 +467,13 @@ function renderCalendar() {
         const load     = getDayLoad(activeTasks);
         const word     = count === 1 ? 'задача' : count < 5 ? 'задачи' : 'задач';
         const doneClass = count === 0 && completedCount > 0 ? ' calendar-day--done' : '';
-        const classes  = `calendar-day calendar-day--${load.level}${doneClass}${isToday ? ' calendar-day--today' : ''}${count > 0 ? ' calendar-day--has-tasks' : ''}`;
+        const completedClass = completedCount > 0 ? ' calendar-day--has-completed' : '';
+        const classes  = `calendar-day calendar-day--${load.level}${doneClass}${completedClass}${isToday ? ' calendar-day--today' : ''}${count > 0 ? ' calendar-day--has-tasks' : ''}`;
+        const completedMark = count > 0 && completedCount > 0
+            ? `<div class="task-completed-mark" title="Выполнено: ${completedCount}">✓ ${completedCount}</div>`
+            : '';
         const countHtml = count > 0
-            ? `<div class="task-count">${count} ${word}</div><div class="day-load-badge">${load.label}</div>`
+            ? `${completedMark}<div class="task-count">${count} ${word}</div><div class="day-load-badge">${load.label}</div>`
             : completedCount > 0
                 ? `<div class="task-count task-count--done">✓ ${completedCount}</div><div class="day-load-badge day-load-badge--done">готово</div>`
                 : '';
@@ -521,7 +525,7 @@ function openPanel(dateStr) {
                 <div class="panel-task-time">🕐 ${new Date(task.planned_deadline).toLocaleTimeString('ru-RU', {hour:'2-digit', minute:'2-digit'})} · ${formatEffort(Number(task.estimated_minutes) || 60)}</div>
                 ${task.description ? `<p style="font-size:13px;color:#94a3b8;margin:8px 0 0">${task.description}</p>` : ''}
                 <div class="panel-task-actions">
-                    <button class="task-action-btn" onclick="editTask(${task.id}, event)" style="background:rgba(59,130,246,0.2);color:#60a5fa;border:1px solid rgba(59,130,246,0.3)">✏️ Изменить</button>
+                    <button class="task-action-btn task-action-btn--edit" onclick="editTask(${task.id}, event)">✏️ Изменить</button>
                     ${task.status !== 'completed'
                         ? `<button class="task-action-btn task-action-btn--complete" onclick="completeTask(${task.id})">✓ Завершить</button>`
                         : `<span style="color:#86efac;font-size:13px;padding:8px">✓ Выполнено</span>`}

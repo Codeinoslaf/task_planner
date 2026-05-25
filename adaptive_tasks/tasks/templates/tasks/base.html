@@ -5,6 +5,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Task Planner{% endblock %}</title>
+    <script>
+        (function () {
+            try {
+                if (localStorage.getItem('taskPlannerTheme') === 'light') {
+                    document.documentElement.classList.add('theme-light');
+                }
+            } catch (e) {}
+        }());
+    </script>
     <link rel="stylesheet" href="{% static 'tasks/css/base.css' %}">
     {% block extra_css %}{% endblock %}
 </head>
@@ -32,6 +41,9 @@
         </div>
         {% endif %}
         <a href="{% url 'profile' %}">👤 Профиль</a>
+        <button class="theme-toggle" id="theme-toggle" type="button" title="Переключить тему" aria-label="Переключить тему">
+            <span class="theme-toggle__icon" id="theme-toggle-icon">☀️</span>
+        </button>
     </div>
 </nav>
 
@@ -44,6 +56,7 @@
 {% endif %}
 
 {% block extra_js %}{% endblock %}
+<script src="{% static 'tasks/js/theme.js' %}"></script>
 
 {% if user.is_authenticated %}
 <script>

@@ -194,6 +194,20 @@
     font-weight: 700;
 }
 
+.task-completed-mark {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    padding: 2px 5px;
+    border-radius: 999px;
+    border: 1px solid rgba(34, 197, 94, 0.28);
+    background: rgba(34, 197, 94, 0.12);
+    color: #86efac;
+    font-size: 10px;
+    font-weight: 800;
+    line-height: 1.1;
+}
+
 .day-load-badge {
     margin-top: 5px;
     padding: 3px 7px;
@@ -450,39 +464,64 @@
 
 .panel-task-actions {
     display: flex;
-    gap: 8px;
+    gap: 10px;
     margin-top: 12px;
 }
 
 .task-action-btn {
     flex: 1;
-    padding: 8px 12px;
+    min-height: 36px;
+    padding: 8px 10px;
     border-radius: 10px;
-    border: none;
-    font-size: 13px;
-    font-weight: 600;
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    background: rgba(30, 41, 59, 0.54);
+    color: #cbd5e1;
+    font-size: 12px;
+    font-weight: 750;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.task-action-btn:hover {
+    transform: translateY(-1px);
+    background: rgba(51, 65, 85, 0.7);
+    border-color: rgba(148, 163, 184, 0.32);
+}
+
+.task-action-btn--edit {
+    color: #93c5fd;
+    border-color: rgba(59, 130, 246, 0.24);
+    background: rgba(59, 130, 246, 0.12);
+}
+
+.task-action-btn--edit:hover {
+    background: rgba(59, 130, 246, 0.18);
+    border-color: rgba(59, 130, 246, 0.42);
+    box-shadow: 0 8px 18px rgba(59, 130, 246, 0.12);
 }
 
 .task-action-btn--complete {
-    background: rgba(34, 197, 94, 0.2);
     color: #86efac;
-    border: 1px solid rgba(34, 197, 94, 0.3);
+    border-color: rgba(34, 197, 94, 0.24);
+    background: rgba(34, 197, 94, 0.12);
 }
 
 .task-action-btn--complete:hover {
-    background: rgba(34, 197, 94, 0.3);
+    background: rgba(34, 197, 94, 0.18);
+    border-color: rgba(34, 197, 94, 0.42);
+    box-shadow: 0 8px 18px rgba(34, 197, 94, 0.12);
 }
 
 .task-action-btn--delete {
-    background: rgba(239, 68, 68, 0.2);
     color: #fca5a5;
-    border: 1px solid rgba(239, 68, 68, 0.3);
+    border-color: rgba(239, 68, 68, 0.22);
+    background: rgba(239, 68, 68, 0.1);
 }
 
 .task-action-btn--delete:hover {
-    background: rgba(239, 68, 68, 0.3);
+    background: rgba(239, 68, 68, 0.17);
+    border-color: rgba(239, 68, 68, 0.4);
+    box-shadow: 0 8px 18px rgba(239, 68, 68, 0.12);
 }
 
 /* ── Time picker ──────────────────────────────────────────── */
@@ -766,6 +805,248 @@
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ── Светлая тема календаря ───────────────────────────────── */
+html.theme-light .calendar-header,
+html.theme-light .calendar-grid {
+    background: rgba(255, 255, 255, 0.78);
+    border-color: rgba(99, 102, 241, 0.16);
+    box-shadow: 0 16px 42px rgba(15, 23, 42, 0.1);
+}
+
+html.theme-light .calendar-subtitle,
+html.theme-light .weekday,
+html.theme-light .task-count,
+html.theme-light .panel-day-dashboard__label,
+html.theme-light .panel-day-dashboard__text,
+html.theme-light .panel-task-time,
+html.theme-light .ai-task-profile__label,
+html.theme-light .ai-risk-summary__label,
+html.theme-light .ai-risk-reasons,
+html.theme-light .time-input-hint,
+html.theme-light .ai-hint-loader {
+    color: #64748b;
+}
+
+html.theme-light .calendar-nav button {
+    background: rgba(255, 255, 255, 0.86);
+    border-color: rgba(99, 102, 241, 0.24);
+    color: #334155;
+}
+
+html.theme-light .calendar-nav button:hover {
+    background: rgba(99, 102, 241, 0.12);
+    border-color: #6366f1;
+    box-shadow: 0 8px 20px rgba(99, 102, 241, 0.16);
+}
+
+html.theme-light .calendar-day {
+    background: rgba(255, 255, 255, 0.7);
+    border-color: rgba(99, 102, 241, 0.14);
+}
+
+html.theme-light .calendar-day:hover {
+    background: rgba(99, 102, 241, 0.1);
+    border-color: #6366f1;
+    box-shadow: 0 8px 22px rgba(99, 102, 241, 0.16);
+}
+
+html.theme-light .day-number,
+html.theme-light .panel-task-title,
+html.theme-light .panel-day-dashboard__title,
+html.theme-light .ai-risk-summary__title,
+html.theme-light .ai-risk-summary__score,
+html.theme-light .ai-hint-title,
+html.theme-light .time-popup-title {
+    color: #0f172a;
+}
+
+html.theme-light .calendar-day--today {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.14), rgba(20, 184, 166, 0.12));
+    border-color: #6366f1;
+}
+
+html.theme-light .calendar-day--today .day-number {
+    color: #c2410c;
+}
+
+html.theme-light .day-load-badge {
+    background: rgba(241, 245, 249, 0.86);
+    color: #475569;
+}
+
+html.theme-light .calendar-day--light,
+html.theme-light .calendar-day--done,
+html.theme-light .panel-day-dashboard--light,
+html.theme-light .panel-day-dashboard--done {
+    background: rgba(34, 197, 94, 0.1);
+}
+
+html.theme-light .calendar-day--done {
+    border-color: rgba(21, 128, 61, 0.34);
+    box-shadow: inset 0 0 0 1px rgba(34, 197, 94, 0.06);
+}
+
+html.theme-light .task-count--done,
+html.theme-light .day-load-badge--done,
+html.theme-light .task-completed-mark {
+    color: #15803d;
+}
+
+html.theme-light .task-completed-mark {
+    border-color: rgba(21, 128, 61, 0.22);
+    background: rgba(34, 197, 94, 0.12);
+}
+
+html.theme-light .calendar-day--busy,
+html.theme-light .panel-day-dashboard--busy {
+    background: rgba(251, 191, 36, 0.14);
+}
+
+html.theme-light .calendar-day--overload,
+html.theme-light .panel-day-dashboard--overload {
+    background: rgba(239, 68, 68, 0.1);
+}
+
+html.theme-light .side-panel {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(238, 242, 255, 0.96));
+    border-left-color: rgba(99, 102, 241, 0.2);
+    box-shadow: -14px 0 42px rgba(15, 23, 42, 0.14);
+}
+
+html.theme-light .side-panel__head {
+    border-bottom-color: rgba(99, 102, 241, 0.16);
+}
+
+html.theme-light .btn--secondary,
+html.theme-light .time-popup-btn--secondary {
+    background: rgba(226, 232, 240, 0.8);
+    border-color: rgba(100, 116, 139, 0.22);
+    color: #334155;
+}
+
+html.theme-light .btn--secondary:hover,
+html.theme-light .time-popup-btn--secondary:hover {
+    background: rgba(203, 213, 225, 0.86);
+}
+
+html.theme-light .panel-day-dashboard,
+html.theme-light .ai-task-profile {
+    background: rgba(255, 255, 255, 0.7);
+    border-color: rgba(99, 102, 241, 0.18);
+}
+
+html.theme-light .panel-day-dashboard__add {
+    background: rgba(251, 191, 36, 0.18);
+    color: #92400e;
+}
+
+html.theme-light .panel-task-item,
+html.theme-light .ai-risk-summary {
+    background: rgba(255, 255, 255, 0.76);
+    border-color: rgba(99, 102, 241, 0.16);
+}
+
+html.theme-light .panel-task-item:hover {
+    border-color: #6366f1;
+    box-shadow: 0 8px 24px rgba(99, 102, 241, 0.14);
+}
+
+html.theme-light .panel-task-item--completed {
+    background: rgba(241, 245, 249, 0.78);
+}
+
+html.theme-light .panel-task-item--completed .panel-task-title {
+    color: #64748b;
+}
+
+html.theme-light .task-action-btn {
+    background: rgba(248, 250, 252, 0.86);
+    border-color: rgba(100, 116, 139, 0.16);
+    color: #475569;
+}
+
+html.theme-light .task-action-btn:hover {
+    background: rgba(241, 245, 249, 0.95);
+    border-color: rgba(100, 116, 139, 0.28);
+}
+
+html.theme-light .task-action-btn--edit {
+    color: #2563eb;
+    border-color: rgba(37, 99, 235, 0.18);
+    background: rgba(59, 130, 246, 0.09);
+}
+
+html.theme-light .task-action-btn--edit:hover {
+    background: rgba(59, 130, 246, 0.14);
+    border-color: rgba(37, 99, 235, 0.32);
+}
+
+html.theme-light .task-action-btn--complete {
+    color: #15803d;
+    border-color: rgba(21, 128, 61, 0.18);
+    background: rgba(34, 197, 94, 0.1);
+}
+
+html.theme-light .task-action-btn--complete:hover {
+    background: rgba(34, 197, 94, 0.15);
+    border-color: rgba(21, 128, 61, 0.32);
+}
+
+html.theme-light .task-action-btn--delete {
+    color: #b91c1c;
+    border-color: rgba(185, 28, 28, 0.16);
+    background: rgba(239, 68, 68, 0.08);
+}
+
+html.theme-light .task-action-btn--delete:hover {
+    background: rgba(239, 68, 68, 0.13);
+    border-color: rgba(185, 28, 28, 0.3);
+}
+
+html.theme-light .time-input-field,
+html.theme-light .time-quick-btn {
+    background: rgba(255, 255, 255, 0.82);
+    color: #0f172a;
+}
+
+html.theme-light .time-input-field:hover,
+html.theme-light .time-input-field:focus,
+html.theme-light .time-quick-btn:hover {
+    background: rgba(99, 102, 241, 0.1);
+}
+
+html.theme-light .time-popup {
+    background: rgba(255, 255, 255, 0.98);
+    border-color: rgba(99, 102, 241, 0.24);
+    box-shadow: 0 24px 64px rgba(15, 23, 42, 0.2);
+}
+
+html.theme-light .time-popup-overlay {
+    background: rgba(15, 23, 42, 0.28);
+}
+
+html.theme-light .time-quick-btn {
+    border-color: rgba(99, 102, 241, 0.22);
+}
+
+html.theme-light .ai-task-profile__chips span {
+    background: rgba(99, 102, 241, 0.12);
+    color: #4338ca;
+}
+
+html.theme-light .ai-risk-summary__text,
+html.theme-light .ai-hint-text {
+    color: #475569;
+}
+
+html.theme-light .ai-hint-action {
+    background: rgba(255, 255, 255, 0.55);
+}
+
+html.theme-light .ai-hint-action:hover {
+    background: rgba(255, 255, 255, 0.82);
+}
 
 /* ── Адаптив ──────────────────────────────────────────────── */
 @media (max-width: 1200px) {
